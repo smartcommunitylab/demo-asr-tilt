@@ -21,7 +21,7 @@ $(document).ready(function() {
     	var sending = textChunk;
     	textChunk = '';
     	$.ajax({
-    		url: '/api/update',
+    		url: 'api/update',
     		type: 'POST',
     		dataType:"json",
     		data: JSON.stringify({text:sending}),
@@ -46,7 +46,7 @@ $(document).ready(function() {
      */
     var getWordData = function() {
     	$.ajax({
-    		url: '/api/words',
+    		url: 'api/words',
     		type: 'GET',
     		success: function(data) {
     			viewTimer = null;
