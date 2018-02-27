@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html  xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>ASR Service</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <meta name='keywords' content='FBK fbk trascrizione transcription riconoscimento vocale speech recognition asr' />
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet"/>
+
+
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap-theme.min.css" />
+    <link rel="stylesheet" type="text/css" href="css/lindat.css"/>
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+    <link rel="stylesheet" type="text/css" href="css/jqcloud.min.css" />
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/jqcloud.min.js"></script>
+
+
+<!--  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script> 
+ -->
+    <script src="js/socket.io.js"></script>
+    <script src="js/Recorder.js"></script>
+    <script src="js/SpeechRecognition.js"></script>
+    <script src="js/models.js"></script>
+    <script src="js/main.js"></script>
+    <script th:inline="javascript">
+    /*<![CDATA[*/
+    var apiUrl = [[${apiUrl}]];
+    var availableWorkersUrl = [[${workersUrl}]];
+    var modelLang = [[${mdl}]];
+    /*]]>*/
+    </script>
+</head>
+
+<body>
+
+
+<p class="text-center">
+    <a id="start_recording" class="btn"><img src="img/microphone.png" /></a>
+    <a id="stop_recording" class="btn btn-danger" style="display: none"><img src="img/microphone_speech.png" /></a>
+</p>
+
+<div>
+    <canvas id="canvas" style="display: none; width: 100%; height: 100px"></canvas>
+</div>
+
+<div id="error" class="alert alert-danger text-center" role="alert" style="display: none"></div>
+
+
+<div class="well well-lg">
+    <div id="result-evaluation" style="display: none"></div>
+    <div id="result-dictation"></div>
+</div>
+
+<div id="keywords" style="margin: auto;">
+</div>
+
+</body>
+</html>
