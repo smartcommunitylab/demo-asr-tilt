@@ -52,7 +52,7 @@
 
         function createSocket(apiUrl) {
         	console.log(apiUrl);
-            socket = io.connect(apiUrl, {resource:'asr'});
+            socket = io.connect(apiUrl);
 
             socket.on("connect", function() {
                 console.log("Socket connected");
