@@ -95,7 +95,7 @@ $(document).ready(function() {
     }
 
     speechRecognition.onerror = function(e) {
-        $('#error').html("<strong>" + e + "</strong> Please try again later.").show()
+//        $('#error').html("<strong>" + e + "</strong> Please try again later.").show()
     }
 
     speechRecognition.onchunk = function(chunk) {
