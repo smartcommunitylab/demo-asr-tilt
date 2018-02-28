@@ -15,42 +15,67 @@
  ******************************************************************************/
 package it.smartcommunity.speech.speechbuilder.model;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.data.annotation.Id;
 
 /**
  * @author raman
  *
  */
-public class InputModel {
+public class WordCloudModel {
 
 	@Id
 	private String id;
+
+	private String type;
+	private List<WordCount> model = new LinkedList<>();
 	
-	private String text;
-	private long timestamp;
-
-	
-	public String getText() {
-		return text;
+	public String getType() {
+		return type;
 	}
-
-	public void setText(String text) {
-		this.text = text;
+	public void setType(String type) {
+		this.type = type;
 	}
-
-	public long getTimestamp() {
-		return timestamp;
-	}
-
-	public void setTimestamp(long timestamp) {
-		this.timestamp = timestamp;
-	}
-
 	public String getId() {
 		return id;
 	}
-
 	public void setId(String id) {
 		this.id = id;
 	}
+
+	public static class WordCount {
+		private String name;
+		private Map<String, Object> itemStyle;
+		private int value;
+		public String getName() {
+			return name;
+		}
+		public void setName(String name) {
+			this.name = name;
+		}
+		public Map<String, Object> getItemStyle() {
+			return itemStyle;
+		}
+		public void setItemStyle(Map<String, Object> itemStyle) {
+			this.itemStyle = itemStyle;
+		}
+		public int getValue() {
+			return value;
+		}
+		public void setValue(int value) {
+			this.value = value;
+		}
+	}
+
+
+	public List<WordCount> getModel() {
+		return model;
+	}
+	public void setModel(List<WordCount> model) {
+		this.model = model;
+	}
+	
 }

@@ -30,7 +30,6 @@
     <script th:inline="javascript">
     /*<![CDATA[*/
     var apiUrl = [[${apiUrl}]];
-    var availableWorkersUrl = [[${workersUrl}]];
     var modelLang = [[${mdl}]];
     /*]]>*/
     </script>
@@ -44,14 +43,14 @@
     <a id="stop_recording" class="btn btn-danger" style="display: none"><img src="img/microphone_speech.png" /></a>
 </p>
 
-<div>
+<div style="display: none;" >
     <canvas id="canvas" style="display: none; width: 100%; height: 100px"></canvas>
 </div>
 
 <div id="error" class="alert alert-danger text-center" role="alert" style="display: none"></div>
 
 
-<div class="well well-lg">
+<div class="well well-lg" style="display: none">
     <div id="result-evaluation" style="display: none"></div>
     <div id="result-dictation"></div>
 </div>

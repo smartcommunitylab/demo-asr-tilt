@@ -13,44 +13,17 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  ******************************************************************************/
-package it.smartcommunity.speech.speechbuilder.model;
+package it.smartcommunity.speech.speechbuilder.repository;
 
-import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.repository.MongoRepository;
+
+import it.smartcommunity.speech.speechbuilder.model.WordCloudModel;
 
 /**
  * @author raman
  *
  */
-public class InputModel {
+public interface WordCloudRepository extends MongoRepository<WordCloudModel, String>{
 
-	@Id
-	private String id;
-	
-	private String text;
-	private long timestamp;
-
-	
-	public String getText() {
-		return text;
-	}
-
-	public void setText(String text) {
-		this.text = text;
-	}
-
-	public long getTimestamp() {
-		return timestamp;
-	}
-
-	public void setTimestamp(long timestamp) {
-		this.timestamp = timestamp;
-	}
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
+	WordCloudModel findByType(String type);
 }

@@ -17,7 +17,7 @@ $(document).ready(function() {
      * Send extracted text to word cloud builder
      */
     var sendText = function() {
-    	if (textChunk.split(' ').length <= 1) return;
+    	if (textChunk.split(' ').length <= 10) return;
     	var sending = textChunk;
     	textChunk = '';
     	$.ajax({
@@ -38,9 +38,6 @@ $(document).ready(function() {
     	});
     }
     
-    textChunk = 'test test1 test1 test2 test2 test2 prova prova prova prova prova prova prova prova';
-    sendText();
-    
     /**
      * Get Tag data
      */
@@ -51,9 +48,10 @@ $(document).ready(function() {
     		success: function(data) {
     			viewTimer = null;
     			var words = [];
-    			for (var key in data) {
-    				words.push({text: key, weight: data[key]});
-    			}
+    			data.forEach(function(d) {words.push({text: d.name, weight: d.value})});
+//    			for (var key in data) {
+//    				words.push({text: key, weight: data[key]});
+//    			}
     			$('#keywords').jQCloud('update', words);
     			console.log('data', data);
         	}
