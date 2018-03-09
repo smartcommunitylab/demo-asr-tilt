@@ -1,6 +1,6 @@
 (function(window){
 
-    var SpeechRecognition = function(apiUrl) {
+    var SpeechRecognition = function(apiUrl, apiResource) {
         this.continuous = true;
         this.interimResults = true;
         this.onstart = function() {};
@@ -14,7 +14,7 @@
 
         var recognizer = this;
         var recorder = createRecorder();
-        var socket = createSocket(apiUrl);
+        var socket = createSocket(apiUrl, apiResource);
 
         this.start = function(model) {
             socket.emit('begin', {'model':model});
@@ -50,9 +50,12 @@
             recognizer.onend();
         };
 
-        function createSocket(apiUrl) {
+        function createSocket(apiUrl, apiResource) {
         	console.log(apiUrl);
-            socket = io.connect(apiUrl, {resource:'asr'});
+        	if (apiResource && apiResource != 'socket.io')
+        		socket = io.connect(apiUrl, {resource:apiResource});
+        	else 
+        		socket = io.connect(apiUrl);
 
             socket.on("connect", function() {
                 console.log("Socket connected");

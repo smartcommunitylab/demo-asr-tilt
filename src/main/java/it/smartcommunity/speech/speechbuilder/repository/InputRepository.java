@@ -27,5 +27,7 @@ import it.smartcommunity.speech.speechbuilder.model.InputModel;
  */
 public interface InputRepository extends MongoRepository<InputModel, String>{
 
+	List<InputModel> findByTypeAndTimestampGreaterThan(String type, long timestamp);
 	List<InputModel> findByTimestampGreaterThan(long timestamp);
+	List<InputModel> findByType(String type);
 }

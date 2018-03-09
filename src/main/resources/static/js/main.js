@@ -1,7 +1,7 @@
 var lastResult;
 
 $(document).ready(function() {
-    var speechRecognition = new SpeechRecognition(apiUrl);
+    var speechRecognition = new SpeechRecognition(apiUrl, apiResource);
     var $result = $('#result');
 
     var viewTimer = null;
@@ -17,11 +17,11 @@ $(document).ready(function() {
      * Send extracted text to word cloud builder
      */
     var sendText = function() {
-    	if (textChunk.split(' ').length <= 10) return;
+    	if (textChunk.split(' ').length <= 20) return;
     	var sending = textChunk;
     	textChunk = '';
     	$.ajax({
-    		url: 'api/update',
+    		url: '../api/update/'+group,
     		type: 'POST',
     		dataType:"json",
     		data: JSON.stringify({text:sending}),
@@ -43,7 +43,7 @@ $(document).ready(function() {
      */
     var getWordData = function() {
     	$.ajax({
-    		url: 'api/words',
+    		url: '../api/words?group='+group,
     		type: 'GET',
     		success: function(data) {
     			viewTimer = null;
@@ -58,22 +58,36 @@ $(document).ready(function() {
     	});
     }
     getWordData();
+
+//    $('#result-dictation').html("<span class='current transcription-result'></span>");
+//    var word = 1;
+//    setInterval(function() {
+//    	updateText('word'+word++, true);
+//    }, 100);
+    
+    var updateText = function(transcript, final) {
+        $('#result-dictation .current').text(transcript + " ");
+
+        if(final) {
+            textChunk += transcript+' ';
+            sendText();
+
+            $('#result-dictation .current').removeClass("current");
+            $('#result-dictation').append("<span class='current transcription-result'></span>");
+        }    	
+        if ($('#result-dictation').children().length > 50) {
+        	var keep = $('#result-dictation').children().slice($('#result-dictation').children().length - 50);
+        	$('#result-dictation').empty();
+        	$('#result-dictation').append(keep);
+        }
+    }
     
     speechRecognition.onresult = function(result) {
         var transcript = result.result.hypotheses[0].transcript;
         if(transcript == '') {
             return;
         }
-
-        $('#result-dictation .current').text(transcript + " ");
-
-        if(result.final) {
-            textChunk += transcript+' ';
-            sendText();
-
-            $('#result-dictation .current').removeClass("current");
-            $('#result-dictation').append("<span class='current transcription-result'></span>");
-        }
+        updateText(transcript, result.final);
     }
 
     speechRecognition.onstart = function(e) {
@@ -216,5 +230,33 @@ $(document).ready(function() {
 
     var models = [];
 
+    $('#uploadBtn').on('click', function() {
+        $.ajax({
+            // Your server script to process the upload
+            url: '../api/upload/'+group,
+            type: 'POST',
+
+            // Form data
+            data: new FormData($('form')[0]),
+
+            // Tell jQuery not to process data or worry about content-type
+            // You *must* include these options!
+            cache: false,
+            contentType: false,
+            processData: false,
+            success: function() {
+              $('#success').html("Operazione e' andata a buon fine!").show();
+              setTimeout(function() {
+            	  $('#success').hide();
+              }, 3000);
+            },
+            error: function(e) {
+                $('#error').html("Operazione fallita. Riprova piu' tardi.").show();
+                setTimeout(function() {
+              	  $('#error').hide();
+                }, 3000);
+            }
+        });
+    });
 
 });

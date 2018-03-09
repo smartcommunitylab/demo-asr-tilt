@@ -28,6 +28,7 @@ public class InputModel {
 	
 	private String text;
 	private long timestamp;
+	private String type;
 
 	
 	public String getText() {
@@ -53,4 +54,13 @@ public class InputModel {
 	public void setId(String id) {
 		this.id = id;
 	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+	
 }
