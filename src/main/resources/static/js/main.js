@@ -18,7 +18,7 @@ $(document).ready(function() {
      */
     var sendText = function() {
     	if (textChunk.split(' ').length <= 20) return;
-    	var sending = textChunk;
+    	var sending = textChunk.replace('<unk>', '');
     	textChunk = '';
     	$.ajax({
     		url: '../api/update/'+group,
