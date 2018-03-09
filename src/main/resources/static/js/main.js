@@ -69,7 +69,7 @@ $(document).ready(function() {
         $('#result-dictation .current').text(transcript + " ");
 
         if(final) {
-            textChunk += transcript+' ';
+            textChunk += transcript.replace('<unk>','')+' ';
             sendText();
 
             $('#result-dictation .current').removeClass("current");
