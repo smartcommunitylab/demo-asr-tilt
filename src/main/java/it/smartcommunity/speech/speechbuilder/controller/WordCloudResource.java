@@ -22,13 +22,21 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -68,12 +76,15 @@ import it.smartcommunity.speech.speechbuilder.repository.WordCloudRepository;
 @Controller
 public class WordCloudResource {
 
+	private static final Logger logger = LoggerFactory.getLogger(WordCloudResource.class);
+	
 	@Autowired
 	private InputRepository inputRepo;
 	@Autowired
 	private WordCloudRepository cloudRepo;
 	
 	private static final String DEFAULTCLOUD = "defaultCloud";
+	private static ExecutorService executor = Executors.newCachedThreadPool();
 	
 	@Value("${api.url}")
 	private String apiUrl;
@@ -81,6 +92,8 @@ public class WordCloudResource {
 	private String apiUploadUrl;
 	@Value("${api.resource}")
 	private String apiResource;
+	@Value("${upload.dir}")
+	private String uploadDir;
 	
 	@Value("${model}")
 	private String modelLang;
@@ -105,6 +118,26 @@ public class WordCloudResource {
 		}
 		rest.getMessageConverters()
         .add(0, new StringHttpMessageConverter(Charset.forName("UTF-8")));
+		
+		Path dir = Paths.get(uploadDir);
+		Files.list(dir).forEach(subdir -> {
+			try {
+				Files.list(subdir).forEach(file -> {
+					executor.execute(new Runnable() {
+						@Override
+						public void run() {
+							try {
+								processFile(subdir.getFileName().toString(), file);
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+						}
+					});
+				});
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		});
 	}
 	
 	
@@ -152,8 +185,30 @@ public class WordCloudResource {
 	 */
 	@PostMapping(value = "/api/upload/{group}")
 	public ResponseEntity<List<WordCount>> uploadAudio(@PathVariable String group, @RequestParam("file") MultipartFile file) throws Exception {
-		String res = uploadStream(file);
+
+		Files.createDirectories(Paths.get(uploadDir + "/" + group));
+		final Path nfile = Files.createFile(Paths.get(uploadDir + "/" + group +"/" + UUID.randomUUID().toString()));
+		Files.write(nfile, file.getBytes());
+		
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					processFile(group, nfile);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		});
+		
+		return ResponseEntity.ok(getCloud(group));
+	}
+
+	private void processFile(String group, Path file) throws IOException {
+		logger.info("Processing file "+file);
+		String res = uploadStream(Files.readAllBytes(file));
 		if (StringUtils.hasText(res)) {
+			logger.info("Process result (length): "+res.length());
 			InputModel model = new InputModel();
 			model.setText(res);
 			model.setTimestamp(System.currentTimeMillis());
@@ -161,9 +216,10 @@ public class WordCloudResource {
 			inputRepo.save(model);
 			updateCloud(group);
 			updateCloud(DEFAULTCLOUD);
+			Files.delete(file);
+		} else {
+			logger.info("Process failed ");
 		}
-		
-		return ResponseEntity.ok(getCloud(group));
 	}
 
 	
@@ -173,7 +229,7 @@ public class WordCloudResource {
 	 * @throws IOException 
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private String uploadStream(MultipartFile file) throws IOException {
+	private String uploadStream(byte[] bytes) throws IOException {
 		String url = apiUploadUrl+"/recognize?lang="+modelLang;
 
 		HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
@@ -181,7 +237,7 @@ public class WordCloudResource {
 		con.setRequestMethod("POST");
 		con.setDoOutput(true);
 		OutputStream wr = con.getOutputStream();
-		wr.write(file.getBytes());
+		wr.write(bytes);
 		wr.flush();
 		wr.close();
 		String res ="";
@@ -191,6 +247,7 @@ public class WordCloudResource {
 		    while ((line = br.readLine()) != null) {
 		    	res += line;
 		    }
+		    System.err.println(res);
 		    Map<String, Object> resMap = mapper.readValue(res, new TypeReference<Map<String,Object>>() {});
 		    if (resMap != null && resMap.containsKey("result")) {
 		    	List<Map> list = (List<Map>) resMap.get("result");
