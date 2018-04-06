@@ -26,6 +26,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -84,6 +86,7 @@ public class WordCloudResource {
 	private WordCloudRepository cloudRepo;
 	
 	private static final String DEFAULTCLOUD = "defaultCloud";
+	private static final String SOCIALCLOUD = "socialCloud";
 	private static ExecutorService executor = Executors.newCachedThreadPool();
 	
 	@Value("${api.url}")
@@ -102,6 +105,10 @@ public class WordCloudResource {
 	private String cloudBuilderUri;
 	@Value("${tagbuilder.options}")
 	private String cloudBuilderOptions;
+	@Value("${tagsocial.uri}")
+	private String cloudSocialUri;
+	@Value("${tagsocial.options}")
+	private String cloudSocialOptions;
 	
 	private RestTemplate rest = new RestTemplate();
 	private ObjectMapper mapper = new ObjectMapper();
@@ -280,7 +287,24 @@ public class WordCloudResource {
 			cloud = cloudRepo.findByType(cloudType);
 			if (cloud == null) return Collections.emptyList();
 		}
-		return cloudRepo.findByType(cloudType).getModel();
+		List<WordCount> res = cloudRepo.findByType(cloudType).getModel();
+		if (DEFAULTCLOUD.equals(cloudType)) {
+			Map<String, WordCount> map = new HashMap<>();
+			res.forEach(r -> map.put(r.getName(), r));
+			
+			cloud = cloudRepo.findByType(SOCIALCLOUD);
+			if (cloud != null && cloud.getModel() != null) {
+				cloud.getModel().forEach(r -> {
+					if (map.containsKey(r.getName())) {
+						map.get(r.getName()).setValue(Math.max(r.getValue(), map.get(r.getName()).getValue()));
+					} else {
+						map.put(r.getName(), r);
+					}
+				});
+				res = new LinkedList<>(map.values());
+			}
+		}
+		return res;
 	}
 
 	private void updateCloud(String type) {
@@ -303,7 +327,24 @@ public class WordCloudResource {
 		}
 		model.setModel(cloud);
 		cloudRepo.save(model);
-	}
+		try {
+			updateSocial();
+		} catch (Exception e) {
+		}
+   }
+  	
+	private void updateSocial() {
+		List<WordCount> cloud = buildSocial();
+		if (cloud == null) return;
+		WordCloudModel model = cloudRepo.findByType(SOCIALCLOUD);
+		if (model == null) {
+			model = new WordCloudModel();
+			model.setType(SOCIALCLOUD);
+		}
+		model.setModel(cloud);
+		cloudRepo.save(model);
+   }	
+	
    private List<WordCount> buildCloud(String text, String type) {
 	   HttpHeaders headers = new HttpHeaders();
 	   headers.set("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
@@ -312,6 +353,26 @@ public class WordCloudResource {
 	   map.add("text", text);
 	   HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
 	   String resStr = rest.postForEntity(cloudBuilderUri, request, String.class).getBody();
+	   try {
+		   Map<String, Object> res = mapper.readValue(resStr, new TypeReference<Map<String,Object>>() {});
+		   if (res.containsKey("wordcloudarray")) {
+			   TypeReference<List<WordCount>> tr = new TypeReference<List<WordCount>>() {};
+			   return mapper.convertValue(res.get("wordcloudarray"), tr);
+		   }
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	   return null;
+   } 
+   
+   
+   private List<WordCount> buildSocial() {
+	   HttpHeaders headers = new HttpHeaders();
+	   headers.set("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
+	   MultiValueMap<String, String> map= new LinkedMultiValueMap<String, String>();
+	   map.add("options", cloudSocialOptions);
+	   HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
+	   String resStr = rest.postForEntity(cloudSocialUri, request, String.class).getBody();
 	   try {
 		   Map<String, Object> res = mapper.readValue(resStr, new TypeReference<Map<String,Object>>() {});
 		   if (res.containsKey("wordcloudarray")) {
