@@ -48,8 +48,19 @@ h1 {
 
 #qrcode {
     position: absolute;
-    bottom : 20px;
+    bottom : 81px;
     right: 20px;
+}
+
+.footer {
+    padding: 20px 20px;
+    border-top: 1px solid #ddd;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: #fff;
+    max-height: 81px;
+    overflow: scroll;
 }
 
 </style>
@@ -91,14 +102,13 @@ h1 {
 	<h1 class="text-center">Trento Smart City Week parla di</h1>
 
 	<div id="keywords"
-		style="margin: auto; width: 90%; height: calc(100% - 280px)"></div>
+		style="margin: auto; width: 90%; height: calc(100% - 361px)"></div>
 
-<!-- 	<footer class="footer">
-		<div class="container">
-			<p class="text-muted">Place sticky footer content here.</p>
-		</div>
+ 	<footer class="footer">
+ 	<div class="container-fluid">
+			<span class="text-muted">Questo tag cloud viene aggiornato elaborando in tempo reale il contenuto degli interventi dei relatori, dei profili social, delle interviste ai cittadini e delle rassegne stampa durante la Trento Smart City Week. Se vuoi saperne di più, vienici a trovare allo stand FBK.</span>
+	</div>		
 	</footer>
- -->
         <img id="qrcode" src="img/qrcode.png" width="10%" height="auto" />
  </body>
 </html>

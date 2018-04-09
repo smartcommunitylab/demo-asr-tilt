@@ -277,10 +277,11 @@ public class WordCloudResource {
 	
 
 	/**
-	 * @return
+	 * @return tag coud data
 	 */
 	private List<WordCount> getCloud(String group) {
 		String cloudType = StringUtils.isEmpty(group) ? DEFAULTCLOUD : group;
+		// create if not present
 		WordCloudModel cloud = cloudRepo.findByType(cloudType);
 		if (cloud == null) {
 			updateCloud(cloudType);
@@ -288,6 +289,7 @@ public class WordCloudResource {
 			if (cloud == null) return Collections.emptyList();
 		}
 		List<WordCount> res = cloudRepo.findByType(cloudType).getModel();
+		// for overall cloud merge data with social cloud 
 		if (DEFAULTCLOUD.equals(cloudType)) {
 			Map<String, WordCount> map = new HashMap<>();
 			res.forEach(r -> map.put(r.getName(), r));
@@ -307,13 +309,20 @@ public class WordCloudResource {
 		return res;
 	}
 
+	/**
+	 * Update cloud data. For main cloud the data is taken from all the input sources
+	 * @param type
+	 */
 	private void updateCloud(String type) {
 		List<InputModel> list = null; 
-		if (DEFAULTCLOUD.equals(type)) {
-			list = inputRepo.findAll(); //findByTypeAndTimestampGreaterThan(System.currentTimeMillis() - 24*60*60*1000);
-		} else {
-			list = inputRepo.findByType(type); //findByTypeAndTimestampGreaterThan(System.currentTimeMillis() - 24*60*60*1000);
-		}
+		// TEMPORARY DISABLE for test
+//		if (DEFAULTCLOUD.equals(type)) {
+//			list = inputRepo.findAll(); //findByTypeAndTimestampGreaterThan(System.currentTimeMillis() - 24*60*60*1000);
+//		} else {
+//			list = inputRepo.findByType(type); //findByTypeAndTimestampGreaterThan(System.currentTimeMillis() - 24*60*60*1000);
+//		}
+		list = inputRepo.findByType(type);
+		
 		String text = list.stream().map(InputModel::getText).collect(Collectors.joining(" "));
 		if (!StringUtils.hasText(text)) {
 			return;
