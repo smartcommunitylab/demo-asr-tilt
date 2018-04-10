@@ -35,7 +35,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	private String username;
 	@Value("${user.password}")
 	private String password;
-
+	@Value("${server.rememberme.key}")
+	private String rememberMeKey;
+	
 	@Override
     protected void configure(HttpSecurity http) throws Exception {
         http
@@ -51,6 +53,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
             .logout()
                 .permitAll();
+        
+        http.rememberMe(). 
+        key(rememberMeKey).
+        alwaysRemember(true).
+        rememberMeCookieName("rememberme").
+        tokenValiditySeconds(24*7*60*60);
     }
 
     @Autowired
