@@ -86,6 +86,7 @@ public class WordCloudResource {
 	private WordCloudRepository cloudRepo;
 	
 	private static final String DEFAULTCLOUD = "defaultCloud";
+	private static final String DRAFTCLOUD = "draft";
 	private static final String SOCIALCLOUD = "socialCloud";
 	private static ExecutorService executor = Executors.newCachedThreadPool();
 	
@@ -145,6 +146,17 @@ public class WordCloudResource {
 				e.printStackTrace();
 			}
 		});
+		
+		WordCloudModel draft = cloudRepo.findByType(DRAFTCLOUD);
+		if (draft == null) {
+			WordCloudModel defaultCloud = cloudRepo.findByType(DEFAULTCLOUD);
+			draft = new WordCloudModel();
+			draft.setType(DRAFTCLOUD);
+			draft.setModel(defaultCloud.getModel());
+			draft.setTimestamp(System.currentTimeMillis());
+			cloudRepo.save(draft);
+		}
+
 	}
 	
 	
@@ -211,6 +223,29 @@ public class WordCloudResource {
 		return ResponseEntity.ok(getCloud(group));
 	}
 
+	@GetMapping(value = "/api/publish")
+	public ResponseEntity<List<String>> publish() {
+		WordCloudModel draft = cloudRepo.findByType(DRAFTCLOUD);
+		WordCloudModel publicCloud = cloudRepo.findByType(DEFAULTCLOUD);
+		publicCloud.setModel(draft.getModel());
+		publicCloud.setTimestamp(System.currentTimeMillis());
+		cloudRepo.save(publicCloud);
+		return ResponseEntity.ok(
+				publicCloud.getModel().stream()
+				.map(wc -> wc.getName())
+				.sorted()
+				.collect(Collectors.toList()));
+	}
+	@GetMapping(value = "/api/draft")
+	public ResponseEntity<List<String>> draft() {
+		WordCloudModel draft = cloudRepo.findByType(DRAFTCLOUD);
+		return ResponseEntity.ok(
+				draft.getModel().stream()
+				.map(wc -> wc.getName())
+				.sorted()
+				.collect(Collectors.toList()));
+	}
+	
 	private void processFile(String group, Path file) throws IOException {
 		logger.info("Processing file "+file);
 		String res = uploadStream(Files.readAllBytes(file));
@@ -314,14 +349,23 @@ public class WordCloudResource {
 	 * @param type
 	 */
 	private void updateCloud(String type) {
-		List<InputModel> list = null; 
-		// TEMPORARY DISABLE for test
-//		if (DEFAULTCLOUD.equals(type)) {
-//			list = inputRepo.findAll(); //findByTypeAndTimestampGreaterThan(System.currentTimeMillis() - 24*60*60*1000);
-//		} else {
-//			list = inputRepo.findByType(type); //findByTypeAndTimestampGreaterThan(System.currentTimeMillis() - 24*60*60*1000);
-//		}
-		list = inputRepo.findByType(type);
+		List<InputModel> list = null;
+		// do not update automatically public cloud data
+		if (DEFAULTCLOUD.equalsIgnoreCase(type)) return;
+		if (SOCIALCLOUD.equalsIgnoreCase(type)) {
+			try {
+				updateSocial();
+			} catch (Exception e) {
+			}
+			return;
+		}
+
+		// draft cloud data is taken from all sources
+		if (DRAFTCLOUD.equals(type)) {
+			list = inputRepo.findAll(); //findByTypeAndTimestampGreaterThan(System.currentTimeMillis() - 24*60*60*1000);
+		} else {
+			list = inputRepo.findByType(type); //findByTypeAndTimestampGreaterThan(System.currentTimeMillis() - 24*60*60*1000);
+		}
 		
 		String text = list.stream().map(InputModel::getText).collect(Collectors.joining(" "));
 		if (!StringUtils.hasText(text)) {
@@ -335,11 +379,8 @@ public class WordCloudResource {
 			model.setType(type);
 		}
 		model.setModel(cloud);
+		model.setTimestamp(System.currentTimeMillis());
 		cloudRepo.save(model);
-		try {
-			updateSocial();
-		} catch (Exception e) {
-		}
    }
   	
 	private void updateSocial() {
@@ -351,6 +392,7 @@ public class WordCloudResource {
 			model.setType(SOCIALCLOUD);
 		}
 		model.setModel(cloud);
+		model.setTimestamp(System.currentTimeMillis());
 		cloudRepo.save(model);
    }	
 	
@@ -378,7 +420,7 @@ public class WordCloudResource {
    private List<WordCount> buildSocial() {
 	   HttpHeaders headers = new HttpHeaders();
 	   headers.set("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
-	   MultiValueMap<String, String> map= new LinkedMultiValueMap<String, String>();
+	   MultiValueMap<String, String> map = new LinkedMultiValueMap<String, String>();
 	   map.add("options", cloudSocialOptions);
 	   HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
 	   String resStr = rest.postForEntity(cloudSocialUri, request, String.class).getBody();

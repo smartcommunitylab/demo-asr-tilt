@@ -32,6 +32,7 @@ public class WordCloudModel {
 
 	private String type;
 	private List<WordCount> model = new LinkedList<>();
+	private long timestamp;
 	
 	public String getType() {
 		return type;
@@ -46,6 +47,8 @@ public class WordCloudModel {
 		this.id = id;
 	}
 
+	
+	
 	public static class WordCount {
 		private String name;
 		private Map<String, Object> itemStyle;
@@ -76,6 +79,12 @@ public class WordCloudModel {
 	}
 	public void setModel(List<WordCount> model) {
 		this.model = model;
+	}
+	public long getTimestamp() {
+		return timestamp;
+	}
+	public void setTimestamp(long timestamp) {
+		this.timestamp = timestamp;
 	}
 	
 }
