@@ -96,7 +96,8 @@
         }
 
         function handleChunk(chunk) {
-            socket.emit("chunk", {chunk: encode16BitPcmToBase64(floatTo16BitPcm(chunk[0])), frame_rate: 44100});
+        	var transformed = encode16BitPcmToBase64(floatTo16BitPcm(chunk[0]))
+            socket.emit("chunk", {chunk: transformed, frame_rate: 44100});
             recognizer.onchunk(chunk);
         }
 
@@ -129,7 +130,7 @@
         function handleVolume(volume) {
             if(volume == 0) {
                 if(recognizer.quietForChunks >= 10) {
-                    return handleError("Microphone is not working!");
+//                    return handleError("Microphone is not working!");
                 }
 
                 recognizer.quietForChunks++;
