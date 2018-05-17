@@ -161,13 +161,14 @@ public class WordCloudResource {
 	
 	
 	@RequestMapping("/")
-    public String home(@RequestParam(required=false) String group, Model model) {
+    public String home(@RequestParam(required=false) String group, @RequestParam(required=false, defaultValue="false") Boolean simple, Model model) {
 		model.addAttribute("apiUrl", apiUrl);
 		model.addAttribute("apiResource", apiResource);
 		model.addAttribute("mdl", modelLang);
 		model.addAttribute("group", group);
-        return "index";
+        return simple ? "simple" : "index";
     }
+
 	@RequestMapping("/processor")
     public String homeProcessor() {
         return "backintro";
