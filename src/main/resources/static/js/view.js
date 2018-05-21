@@ -28,7 +28,7 @@ $(document).ready(function() {
     	});
     }
     getWordData();
-    setInterval(getWordData, 60*1000);
+    setInterval(getWordData, 30*1000);
 
     function createCloud(data) {
     	var chart = echarts.init(document.getElementById('keywords'));

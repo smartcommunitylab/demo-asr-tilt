@@ -29,7 +29,7 @@ public class InputModel {
 	private String text;
 	private long timestamp;
 	private String type;
-
+	private Long archived;
 	
 	public String getText() {
 		return text;
@@ -62,5 +62,13 @@ public class InputModel {
 	public void setType(String type) {
 		this.type = type;
 	}
-	
+
+	public Long getArchived() {
+		return archived;
+	}
+
+	public void setArchived(Long archived) {
+		this.archived = archived;
+	}
+
 }

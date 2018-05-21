@@ -18,6 +18,7 @@ package it.smartcommunity.speech.speechbuilder.repository;
 import java.util.List;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 
 import it.smartcommunity.speech.speechbuilder.model.InputModel;
 
@@ -29,5 +30,6 @@ public interface InputRepository extends MongoRepository<InputModel, String>{
 
 	List<InputModel> findByTypeAndTimestampGreaterThan(String type, long timestamp);
 	List<InputModel> findByTimestampGreaterThan(long timestamp);
+	@Query("{ 'type' : ?0, archived: null}")
 	List<InputModel> findByType(String type);
 }

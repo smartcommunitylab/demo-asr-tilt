@@ -38,6 +38,24 @@ $(document).ready(function() {
     	});
     }
     
+    var reset = function() {
+    	$.ajax({
+    		url: '../api/archive/'+group,
+    		type: 'PUT',
+    		dataType:"json",
+    		success: function(data) {
+        		console.log('archived', data);
+        		if (viewTimer) {
+        			clearTimeout(viewTimer);
+        		}
+        		$('#keywords').empty();
+        		viewTimer = setTimeout(function(){
+        			getWordData();
+        		}, 3000);
+        	}
+    	});
+    }
+    
     /**
      * Get Tag data
      */
@@ -202,6 +220,10 @@ $(document).ready(function() {
         canvas.fillRect(0, height - $/2, params_width, $/2);
         canvas.fillRect(0, halfH - $, params_width, $);
     }
+
+    $('#reset').click(function() {
+    	reset();
+    });
 
     $('#start_recording').click(function() {
         lang = modelLang;

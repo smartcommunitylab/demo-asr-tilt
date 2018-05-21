@@ -56,6 +56,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -310,7 +311,19 @@ public class WordCloudResource {
 	public ResponseEntity<List<WordCount>> read(@RequestParam(required=false, defaultValue="defaultCloud") String group) {
 	   return new ResponseEntity<List<WordCount>>(getCloud(group), HttpStatus.OK);
 	}
-	
+
+	@PutMapping("/api/archive/{group}")
+	public ResponseEntity<List<WordCount>> archive(@PathVariable String group) {
+		List<InputModel> list = inputRepo.findByType(group);
+		final long ts = System.currentTimeMillis();
+		list.forEach(i -> i.setArchived(ts));
+		inputRepo.save(list);
+		WordCloudModel cloud = cloudRepo.findByType(group);
+		cloud.setModel(Collections.emptyList());
+		cloudRepo.save(cloud);
+	    return new ResponseEntity<List<WordCount>>(cloud.getModel(), HttpStatus.OK);
+	}
+
 
 	/**
 	 * @return tag coud data
@@ -330,17 +343,17 @@ public class WordCloudResource {
 			Map<String, WordCount> map = new HashMap<>();
 			res.forEach(r -> map.put(r.getName(), r));
 			
-			cloud = cloudRepo.findByType(SOCIALCLOUD);
-			if (cloud != null && cloud.getModel() != null) {
-				cloud.getModel().forEach(r -> {
-					if (map.containsKey(r.getName())) {
-						map.get(r.getName()).setValue(Math.max(r.getValue(), map.get(r.getName()).getValue()));
-					} else {
-						map.put(r.getName(), r);
-					}
-				});
-				res = new LinkedList<>(map.values());
-			}
+//			cloud = cloudRepo.findByType(SOCIALCLOUD);
+//			if (cloud != null && cloud.getModel() != null) {
+//				cloud.getModel().forEach(r -> {
+//					if (map.containsKey(r.getName())) {
+//						map.get(r.getName()).setValue(Math.max(r.getValue(), map.get(r.getName()).getValue()));
+//					} else {
+//						map.put(r.getName(), r);
+//					}
+//				});
+//				res = new LinkedList<>(map.values());
+//			}
 		}
 		return res;
 	}
@@ -437,7 +450,7 @@ public class WordCloudResource {
 	   return null;
    } 
    
-   @Scheduled(fixedRate=600000)
+   @Scheduled(fixedRate=30000)
    protected void refreshClouds() {
 	   cloudRepo.findAll().forEach(c -> {
 		   updateCloud(c.getType());
