@@ -365,7 +365,7 @@ public class WordCloudResource {
 	private void updateCloud(String type) {
 		List<InputModel> list = null;
 		// do not update automatically public cloud data
-		if (DEFAULTCLOUD.equalsIgnoreCase(type)) return;
+		if (DEFAULTCLOUD.equalsIgnoreCase(type) || DRAFTCLOUD.equalsIgnoreCase(type)) return;
 		if (SOCIALCLOUD.equalsIgnoreCase(type)) {
 			try {
 				updateSocial();
