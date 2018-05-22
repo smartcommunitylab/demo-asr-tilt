@@ -416,6 +416,7 @@ public class WordCloudResource {
 	   MultiValueMap<String, String> map= new LinkedMultiValueMap<String, String>();
 	   map.add("options", cloudBuilderOptions);
 	   map.add("text", text);
+	   logger.error("sending: "+ text);
 	   HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
 	   String resStr = rest.postForEntity(cloudBuilderUri, request, String.class).getBody();
 	   try {
