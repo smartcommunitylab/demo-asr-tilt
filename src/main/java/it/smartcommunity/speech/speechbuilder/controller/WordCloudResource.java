@@ -365,14 +365,16 @@ public class WordCloudResource {
 	private void updateCloud(String type) {
 		List<InputModel> list = null;
 		// do not update automatically public cloud data
-		if (DEFAULTCLOUD.equalsIgnoreCase(type) || DRAFTCLOUD.equalsIgnoreCase(type)) return;
-		if (SOCIALCLOUD.equalsIgnoreCase(type)) {
-			try {
-				updateSocial();
-			} catch (Exception e) {
-			}
-			return;
-		}
+//		if (DEFAULTCLOUD.equalsIgnoreCase(type) || DRAFTCLOUD.equalsIgnoreCase(type)) return;
+//		if (SOCIALCLOUD.equalsIgnoreCase(type)) {
+//			try {
+//				updateSocial();
+//			} catch (Exception e) {
+//			}
+//			return;
+//		}
+		
+		if (!"festival".equalsIgnoreCase(type)) return;
 
 		// draft cloud data is taken from all sources
 		if (DRAFTCLOUD.equals(type)) {
