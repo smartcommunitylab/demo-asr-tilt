@@ -45,13 +45,13 @@ $(document).ready(function() {
     		dataType:"json",
     		success: function(data) {
         		console.log('archived', data);
-        		if (viewTimer) {
-        			clearTimeout(viewTimer);
-        		}
-        		$('#keywords').empty();
-        		viewTimer = setTimeout(function(){
-        			getWordData();
-        		}, 3000);
+//        		if (viewTimer) {
+//        			clearTimeout(viewTimer);
+//        		}
+//        		$('#keywords').empty();
+//        		viewTimer = setTimeout(function(){
+//        			getWordData();
+//        		}, 3000);
         	}
     	});
     }
@@ -77,6 +77,8 @@ $(document).ready(function() {
     	});
     }
     getWordData();
+    setInterval(getWordData, 30*1000);
+
 
 //    $('#result-dictation').html("<span class='current transcription-result'></span>");
 //    var word = 1;
