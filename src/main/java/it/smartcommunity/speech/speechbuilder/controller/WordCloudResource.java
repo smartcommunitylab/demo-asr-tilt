@@ -27,7 +27,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -136,7 +135,7 @@ public class WordCloudResource {
 						@Override
 						public void run() {
 							try {
-								processFile(subdir.getFileName().toString(), file);
+								processFile(subdir.getFileName().toString(), modelLang, file);
 							} catch (IOException e) {
 								e.printStackTrace();
 							}
@@ -179,11 +178,11 @@ public class WordCloudResource {
         return "login";
     }
 	@RequestMapping("/processor/{group}")
-    public String processor(Model model, @PathVariable String group) {
-		model.addAttribute("apiUrl", apiUrl);
-		model.addAttribute("apiResource", apiResource);
-		model.addAttribute("mdl", modelLang);
-		model.addAttribute("group", group);
+    public String processor(Model mdl, @RequestParam(required=false) String model, @PathVariable String group) {
+		mdl.addAttribute("apiUrl", apiUrl);
+		mdl.addAttribute("apiResource", apiResource);
+		mdl.addAttribute("mdl", StringUtils.isEmpty(model) ? modelLang : model);
+		mdl.addAttribute("group", group);
         return "back";
     }
 	
@@ -205,17 +204,19 @@ public class WordCloudResource {
 	 * @throws Exception
 	 */
 	@PostMapping(value = "/api/upload/{group}")
-	public ResponseEntity<List<WordCount>> uploadAudio(@PathVariable String group, @RequestParam("file") MultipartFile file) throws Exception {
+	public ResponseEntity<List<WordCount>> uploadAudio(@PathVariable String group, @RequestParam(required=false) String model, @RequestParam("file") MultipartFile file) throws Exception {
 
 		Files.createDirectories(Paths.get(uploadDir + "/" + group));
 		final Path nfile = Files.createFile(Paths.get(uploadDir + "/" + group +"/" + UUID.randomUUID().toString()));
 		Files.write(nfile, file.getBytes());
 		
+		final String mdl = StringUtils.isEmpty(model) ? modelLang : model; 
+		
 		executor.execute(new Runnable() {
 			@Override
 			public void run() {
 				try {
-					processFile(group, nfile);
+					processFile(group, mdl, nfile);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -248,9 +249,9 @@ public class WordCloudResource {
 				.collect(Collectors.toList()));
 	}
 	
-	private void processFile(String group, Path file) throws IOException {
+	private void processFile(String group, String modelLang, Path file) throws IOException {
 		logger.info("Processing file "+file);
-		String res = uploadStream(Files.readAllBytes(file));
+		String res = uploadStream(modelLang, Files.readAllBytes(file));
 		if (StringUtils.hasText(res)) {
 			logger.info("Process result (length): "+res.length());
 			InputModel model = new InputModel();
@@ -273,7 +274,7 @@ public class WordCloudResource {
 	 * @throws IOException 
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private String uploadStream(byte[] bytes) throws IOException {
+	private String uploadStream(String modelLang, byte[] bytes) throws IOException {
 		String url = apiUploadUrl+"/recognize?lang="+modelLang;
 
 		HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
@@ -364,24 +365,17 @@ public class WordCloudResource {
 	 */
 	private void updateCloud(String type) {
 		List<InputModel> list = null;
-		// do not update automatically public cloud data
-//		if (DEFAULTCLOUD.equalsIgnoreCase(type) || DRAFTCLOUD.equalsIgnoreCase(type)) return;
-//		if (SOCIALCLOUD.equalsIgnoreCase(type)) {
-//			try {
-//				updateSocial();
-//			} catch (Exception e) {
-//			}
-//			return;
-//		}
+		if (DEFAULTCLOUD.equalsIgnoreCase(type) || DRAFTCLOUD.equalsIgnoreCase(type)) return;
 		
-		if (!"festival".equalsIgnoreCase(type)) return;
-
-		// draft cloud data is taken from all sources
-		if (DRAFTCLOUD.equals(type)) {
-			list = inputRepo.findAll(); //findByTypeAndTimestampGreaterThan(System.currentTimeMillis() - 24*60*60*1000);
-		} else {
-			list = inputRepo.findByType(type); //findByTypeAndTimestampGreaterThan(System.currentTimeMillis() - 24*60*60*1000);
+		if (SOCIALCLOUD.equalsIgnoreCase(type)) {
+			try {
+				updateSocial();
+			} catch (Exception e) {
+			}
+			return;
 		}
+		
+		list = inputRepo.findByType(type); //findByTypeAndTimestampGreaterThan(System.currentTimeMillis() - 24*60*60*1000);
 		
 		String text = list.stream().map(InputModel::getText).collect(Collectors.joining(" "));
 		if (!StringUtils.hasText(text)) {
